@@ -4,3 +4,6 @@ git clone https://github.com/dogma-dart/dogma-json-schema.git ../dogma-json-sche
 
 pub install
 dart build.sh
+
+pub global activate linter
+pub global run linter .
