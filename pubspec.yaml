@@ -4,6 +4,8 @@ description: API client for the Drone Continuous Integration Service.
 environment:
   sdk: '>=1.12.0-dev.4.0 <2.0.0'
 dependencies:
+  dogma_data:
+    path: ../dogma-data
   dogma_json_schema:
     path: ../dogma-json-schema
 dev_dependencies:

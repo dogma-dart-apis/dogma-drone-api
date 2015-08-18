@@ -21,8 +21,7 @@ void main(List<String> args) {
 
 /// Header for the generated source files.
 const String _header =
-'''//
-// Copyright (c) 2015, the Dogma Project Authors.
+'''// Copyright (c) 2015, the Dogma Project Authors.
 // Please see the AUTHORS file for details. All rights reserved.
 // Use of this source code is governed by a zlib license that can be found in
 // the LICENSE file.''';
