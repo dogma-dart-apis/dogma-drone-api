@@ -6,7 +6,14 @@ environment:
 dependencies:
   dogma_data:
     path: ../dogma-data
-  dogma_json_schema:
-    path: ../dogma-json-schema
+  dogma_mapper:
+    path: ../dogma-mapper
+  dogma_rest_client:
+    path: ../dogma-rest-client
+  dogma_rest_connection:
+    path: ../dogma-rest-connection
+  uri: ^0.11.0
 dev_dependencies:
+  dogma_swagger:
+    path: ../dogma-swagger
   test: ^0.12.3+9

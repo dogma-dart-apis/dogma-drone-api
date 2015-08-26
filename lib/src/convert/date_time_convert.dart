@@ -3,7 +3,7 @@
 // Use of this source code is governed by a zlib license that can be found in
 // the LICENSE file.
 
-library dogma_drone_api.src.convert.date_time_converter;
+library dogma_drone_api.src.convert.date_time_convert;
 
 //---------------------------------------------------------------------
 // Imports
