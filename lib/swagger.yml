@@ -1,0 +1,1060 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: Drone API
+  license:
+    name: Creative Commons 4.0 International
+    url: "http://creativecommons.org/licenses/by/4.0/"
+
+host: "localhost:8080"
+basePath: /api
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+
+#
+# Operation tags
+#
+
+tags:
+  - name: Repos
+  - name: Builds
+  - name: Badges
+  - name: User
+  - name: Users
+  - name: Tokens
+
+#
+# Security Definitions
+#
+
+security:
+  - accessToken: []
+securityDefinitions:
+  accessToken:
+    type: apiKey
+    in: query
+    name: access_token
+
+#
+# Endpoint Definitions
+#
+
+paths:
+
+  #
+  # Repos Endpoint
+  #
+
+  /repos/{owner}/{name}:
+    get:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      tags:
+        - Repos
+      summary: Get a repo
+      description: Retrieves the details of a repository.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          schema:
+            $ref: "#/definitions/Repo"
+        404:
+          description: |
+            Unable to find the repository.
+
+    patch:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+        - name: repo
+          in: body
+          description: The updated repository JSON
+          schema:
+            $ref: '#/definitions/Repo'
+            example: |
+                {
+                  "trusted":false,
+                  "timeout":60,
+                  "hooks":{
+                    "pull_request":true,
+                    "push":true,
+                    "tags":false
+                  },
+                  "keypair":{
+                    "public": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwXK...",
+                    "private": "-----BEGIN RSA PRIVATE KEY-----\nF7tLaAvx..."
+                  },
+                  "params": {
+                    "HEROKU_KEY": "f0e4c2f76c58916ec258f24"
+                  }
+                }
+          required: true
+      tags:
+        - Repos
+      summary: Updates a repo
+      description: Updates the specified repository.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          schema:
+            $ref: "#/definitions/Repo"
+        400:
+          description: |
+            Unable to update the repository in the database.
+        404:
+          description: |
+            Unable to find the repository.
+
+    post:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      tags:
+        - Repos
+      summary: Creates a repo
+      description: Creates a new repository.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          schema:
+            $ref: "#/definitions/Repo"
+        400:
+          description: |
+            Unable to update the Repository record in the database
+        403:
+          description: |
+            Unable to activate the Repository due to insufficient privileges
+        404:
+          description: |
+            Unable to retrieve the Repository from the remote system (ie GitHub)
+        409:
+          description: |
+            Unable to activate the Repository because it is already activate
+        500:
+          description: |
+            Unable to activate the Repository due to an internal server error. This may indicate a problem adding hooks to the remote system (ie Github), generating SSH deployment keys, or persisting to the database.
+
+    delete:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      tags:
+        - Repos
+      summary: Delete a repo
+      description: Permanently deletes a repository. It cannot be undone.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: |
+            Successfully deleted the Repository
+        400:
+          description: |
+            Unable to remove post-commit hooks from the remote system (ie GitHub)
+        404:
+          description: |
+            Unable to find the Repository in the database
+        500:
+          description: |
+            Unable to update the Repository record in the database
+
+
+  #
+  # Repos Param Encryption Enpoint
+  # TODO: properly add the input output schema
+
+  /repos/{owner}/{name}/encrypt:
+    post:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      tags:
+        - Repos
+      summary: Encrypt
+      description: Creates encrypted environment variable strings.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: The encrypted parameters.
+        400:
+          description: |
+            Unable to encrypt the parameters.
+        404:
+          description: |
+            Unable to find the repository.
+
+
+  #
+  # Repos Watch/Unwatch Enpoint
+  #
+
+  /repos/{owner}/{name}/watch:
+    post:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      tags:
+        - Repos
+      summary: Watch
+      description: Watches the named repository.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: |
+            Successfully watching this repository.
+        400:
+          description: |
+            Unable to update the database.
+        404:
+          description: |
+            Unable to find the repository.
+
+  /repos/{owner}/{name}/unwatch:
+    delete:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      tags:
+        - Repos
+      summary: Unwatch
+      description: Unwatches the repository.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: |
+            Successfully Unwatched this repository.
+        400:
+          description: |
+            Unable to update the database.
+        404:
+          description: |
+            Unable to find the repository.
+
+
+  #
+  # Builds Endpoint
+  #
+
+  /repos/{owner}/{name}/builds:
+    get:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      tags:
+        - Builds
+      summary: Get recent builds
+      description: Returns recent builds for the repository based on name.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: The recent builds.
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Build"
+        404:
+          description: |
+            Unable to find the Repository in the database
+
+  /repos/{owner}/{name}/builds/{number}:
+    get:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+        - name: number
+          in: path
+          type: integer
+          description: sequential build number
+      tags:
+        - Builds
+      summary: Get a build
+      description: Returns the repository build by number.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: The build.
+          schema:
+            $ref: "#/definitions/Build"
+        404:
+          description: |
+            Unable to find the Repository or Build
+    delete:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+        - name: number
+          in: path
+          type: integer
+          description: sequential build number
+      tags:
+        - Builds
+      summary: Cancel a build
+      description: Cancel the a build by number.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: Successfully cancelled the Build
+        404:
+          description: |
+            Unable to find the Repository or Build
+        409:
+          description: |
+            Cannot cancel a Build that is already stopped
+
+    post:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+        - name: number
+          in: path
+          type: integer
+          description: sequential build number
+      tags:
+        - Builds
+      summary: Restart a build
+      description: Restart the a build by number.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: Successfully restarted the Build.
+          schema:
+            $ref: "#/definitions/Build"
+        404:
+          description: |
+            Unable to find the Repository or Build.
+        409:
+          description: |
+            Cannot re-start a Build that is running.
+
+  /repos/{owner}/{name}/logs/{number}/{job}:
+    get:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+        - name: number
+          in: path
+          type: integer
+          description: sequential build number
+        - name: job
+          in: path
+          type: integer
+          description: sequential job number
+      tags:
+        - Builds
+      summary: Get build logs
+      description: Returns the build logs for a specific job (build step).
+      produces:
+        - text/plain
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: The logs for the requested job.
+        404:
+          description: |
+            Unable to find the repository, build or job.
+
+  #
+  # Badges
+  #
+
+  /badges/{owner}/{name}/status.svg:
+    get:
+      tags:
+        - Badges
+      produces:
+        - image/svg+xml
+      summary: Status Badge
+      description: Returns an SVG status badge for the latest Build
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+        - name: string
+          in: query
+          type: string
+          description: specify a branch. defaults to master
+          default: master
+      responses:
+        200:
+          description: Status badge in SVG format
+          examples:
+            image/svg+xml: |
+                <?xml version="1.0"?>
+                <svg xmlns="http://www.w3.org/2000/svg" width="91" height="20">
+                <linearGradient id="a" x2="0" y2="100%">
+                    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+                    <stop offset="1" stop-opacity=".1"/>
+                </linearGradient>
+                <rect rx="3" width="91" height="20" fill="#555"/>
+                <rect rx="3" x="37" width="54" height="20" fill="#4c1"/>
+                <path fill="#4c1" d="M37 0h4v20h-4z"/>
+                <rect rx="3" width="91" height="20" fill="url(#a)"/>
+                <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+                    <text x="19.5" y="15" fill="#010101" fill-opacity=".3">build</text>
+                    <text x="19.5" y="14">build</text>
+                    <text x="63" y="15" fill="#010101" fill-opacity=".3">success</text>
+                    <text x="63" y="14">success</text>
+                </g>
+                </svg>
+  /badges/{owner}/{name}/cc.xml:
+    get:
+      tags:
+        - Badges
+      summary: CCMenu
+      description: Returns a CCMenu feed for the Repository
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: CCMenu XML feed object
+          examples:
+            application/xml: |
+                &lt;Projects&gt;
+                    &lt;Project name=&quot;octocat/octocat&quot;
+                             activity=&quot;Sleeping&quot;
+                             lastBuildStatus=&quot;Success&quot;
+                             lastBuildLabel=&quot;25&quot;
+                             lastBuildTime=&quot;2015-06-23T01:58:20-04:00&quot; /&gt;
+                &lt;/Projects&gt;
+            # application/xml: |
+            #     <Projects>
+            #         <Project name="octocat/octocat"
+            #                  activity="Sleeping"
+            #                  lastBuildStatus="Success"
+            #                  lastBuildLabel="25"
+            #                  lastBuildTime="2015-06-23T01:58:20-04:00" />
+            #     </Projects>
+
+  #
+  # User Endpoint
+  #
+
+  /user:
+    get:
+      summary: Gets a user
+      description: Returns the currently authenticated user.
+      security:
+        - accessToken: []
+      tags:
+        - User
+      responses:
+        200:
+          description: The currently authenticated user.
+          schema:
+            $ref: "#/definitions/User"
+    patch:
+      summary: Updates a user
+      description: Updates the currently authenticated user.
+      tags:
+        - User
+      parameters:
+        - name: user
+          in: body
+          description: Updates to the user.
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        200:
+          description: The updated user.
+          schema:
+            $ref: "#/definitions/User"
+        400:
+          description: |
+            Unable to update the user in the database
+
+
+  #
+  # User Repos
+  #
+
+  /user/repos:
+    get:
+      summary: Get user repos
+      description: |
+        Retrieve the currently authenticated User's Repository list
+      tags:
+        - User
+      responses:
+        200:
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Repo"
+        400:
+          description: |
+            Unable to retrieve Repository list
+
+  #
+  # User Feed
+  #
+
+  /user/feed:
+    get:
+      summary: Get user activity feed
+      description: |
+        Retrieve the currently authenticated User's activity feed.
+      tags:
+        - User
+      responses:
+        200:
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Activity"
+        400:
+          description: |
+            Unable to retrieve Activity list
+
+  #
+  # User Tokens
+  #
+
+  /user/tokens:
+    get:
+      tags:
+        - Tokens
+      summary: Get all tokens
+      description: Returns all tokens for currently authenticated user.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: All user tokens.
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Token"
+    post:
+      parameters:
+        - name: token
+          description: Token input paraeters.
+          in: body
+          schema:
+            example: |
+              {
+                "label": "my_token"
+              }
+      tags:
+        - Tokens
+      summary: Create a token
+      description: Generates a new user access token.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: The generated user token.
+          schema:
+            $ref: "#/definitions/Token"
+        400:
+          description: |
+            Error when attempting to generate the JWT token
+        500:
+          description: |
+            Error when attempting to save the Token
+
+  /user/tokens/{label}:
+    delete:
+      parameters:
+        - name: label
+          in: path
+          type: string
+          description: token label
+      tags:
+        - Tokens
+      summary: Delete a token
+      description: Revokes a token with the matching label.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: |
+            Successfully deleted the Token
+        400:
+          description: |
+            Error attempting to delete Token from database
+        404:
+          description: |
+            Unable to find Token in database
+
+  #
+  # Users Endpoint
+  #
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: Returns all registered, active users in the system.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: All registered users.
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/User"
+
+  /users/{login}:
+    get:
+      parameters:
+        - name: login
+          in: path
+          type: string
+          description: user login
+      tags:
+        - Users
+      summary: Get a user
+      description: Returns a user with the specified login name.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: Returns the user.
+          schema:
+            $ref: "#/definitions/User"
+        404:
+          description: Cannot find user with matching login.
+
+    post:
+      parameters:
+        - name: login
+          in: path
+          type: string
+          description: user login to activate
+      tags:
+        - Users
+      summary: Create a user
+      description: Creates a new user account with the specified external login.
+      security:
+        - accessToken: []
+      responses:
+        201:
+          description: Returns the created user.
+          schema:
+            $ref: "#/definitions/User"
+        400:
+          description: |
+            Error inserting User into the database
+
+    patch:
+      parameters:
+        - name: login
+          in: path
+          type: string
+          description: user login
+        - name: user
+          in: body
+          description: changes to the user
+          schema:
+            $ref: '#/definitions/User'
+            example: |
+                {
+                  "email": "octocat@github.com",
+                  "admin": false,
+                  "active": true
+                }
+          required: true
+
+      tags:
+        - Users
+      summary: Update a user
+      description: Updates an existing user account.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: Returns the updated user.
+          schema:
+            $ref: "#/definitions/User"
+        400:
+          description: |
+            Error updating the User in the database
+
+    delete:
+      parameters:
+        - name: login
+          in: path
+          type: string
+          description: user login
+      tags:
+        - Users
+      summary: Delete a user
+      description: Deletes the user with the specified login name.
+      security:
+        - accessToken: []
+      responses:
+        204:
+          description: |
+            Successfully deleted the User
+        400:
+          description: |
+            Error deleting the User from the database
+        403:
+          description: |
+            Cannot delete your own User account
+        404:
+          description: |
+            Cannot find the User
+
+#
+# Schema Definitions
+#
+
+definitions:
+  User:
+    example: |
+        {
+          "login": "Octocat",
+          "email": "octocat@github.com",
+          "avatar": "7194e8d48fa1d2b689f99443b767316c",
+          "admin": false,
+          "active": true
+        }
+    properties:
+      login:
+        type: string
+      email:
+        type: string
+      avatar:
+        type: string
+      admin:
+        type: boolean
+      active:
+        type: boolean
+  Token:
+    example: |
+        {
+         "label":"my_token",
+         "issued_at":1435289846,
+         "hash":"yUQJHM4YfNZcCLlikAshgjM6hCMlFXmHuABAECGsMQ"
+        }
+    properties:
+      issued_at:
+        type: integer
+        format: int64
+      label:
+        type: string
+      hash:
+        type: string
+  Repo:
+    example: |
+        {
+          "owner":"drone",
+          "name":"drone-test-go",
+          "full_name":"drone/drone-test-go",
+          "self_url":"http://localhost:8080/drone/drone-test-go",
+          "link_url":"https://github.com/drone/drone-test-go",
+          "clone_url":"https://github.com/drone/drone-test-go.git",
+          "default_branch":"master",
+          "private":true,
+          "trusted":false,
+          "timeout":60,
+          "hooks":{
+            "pull_request":true,
+            "push":true,
+            "tags":false
+          },
+          "keypair":{
+            "public": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwXK..."
+          },
+          "permissions":{
+            "pull":true,
+            "push":true,
+            "admin":true
+          },
+          "params": {
+            "HEROKU_KEY": "f0e4c2f76c58916ec258f24"
+          }
+        }
+    properties:
+      owner:
+        type: string
+      name:
+        type: string
+      full_name:
+        type: string
+      link_url:
+        type: string
+      clone_url:
+        type: string
+      default_branch:
+        type: string
+      private:
+        type: boolean
+      trusted:
+        type: boolean
+      timeout:
+        type: integer
+      keypair:
+        type: object
+        properties:
+          public:
+            type: string
+          private:
+            type: string
+      hooks:
+        type: object
+        properties:
+          pull_request:
+            type: boolean
+          push:
+            type: boolean
+          tags:
+            type: boolean
+      permissions:
+        type: object
+        properties:
+          pull:
+            type: boolean
+          push:
+            type: boolean
+          admin:
+            type: boolean
+      params:
+        type: object
+  Build:
+    example: |
+        {
+          "number": 1,
+          "status": "success",
+          "started_at": 5788800,
+          "finished_at": 5789500,
+
+          "head_commit": {
+            "sha": "d101ef3ed6e973b039c3fd5ccdec378b0fa8684c",
+            "ref": "refs\/heads\/master",
+            "branch": "master",
+            "message": "updated the README.md file",
+            "timestamp": "",
+            "remote": "https:\/\/github.com\/drone\/drone.git",
+            "author": {
+              "login": "bradrydzewski",
+              "email": "brad.rydzewski@gmail.com"
+            }
+          },
+
+          "jobs": [
+            {
+              "number": 1,
+              "status": "success",
+              "started_at": 5788800,
+              "finished_at": 5789500,
+              "exit_code": 0,
+              "environment": { "GO_VERSION": "1.4" }
+            },
+            {
+              "number": 2,
+              "status": "success",
+              "started_at": 5788800,
+              "finished_at": 5789500,
+              "exit_code": 0,
+              "environment": { "GO_VERSION": "1.5" }
+            }
+          ]
+        }
+    properties:
+      number:
+        type: integer
+      status:
+        type: string
+        enum:
+          - success
+          - failure
+          - pending
+          - started
+          - error
+          - killed
+      head_commit:
+         $ref: "#/definitions/Commit"
+      pull_request:
+         $ref: "#/definitions/PullRequest"
+  Commit:
+    properties:
+      sha:
+        type: string
+      ref:
+        type: string
+      branch:
+        type: string
+      message:
+        type: string
+      author:
+        $ref: "#/definitions/Author"
+  PullRequest:
+    properties:
+      number:
+        type: integer
+      title:
+        type: string
+      base_commit:
+        $ref: "#/definitions/Commit"
+  Author:
+    properties:
+      login:
+        type: string
+      email:
+        type: string
+  Job:
+    properties:
+      number:
+        type: integer
+      status:
+        type: string
+        enum:
+          - success
+          - failure
+          - pending
+          - started
+          - error
+          - killed
+      exit_code:
+        type: integer
+      started_at:
+        type: integer
+        format: int64
+      finished_at:
+        type: integer
+        format: int64
+      environment:
+        type: object
+  Activity:
+    example: |
+        {
+          "owner":"drone",
+          "name":"drone-test-go",
+          "full_name":"drone/drone-test-go",
+          "number": 1,
+          "status": "success",
+          "started_at": 5788800,
+          "finished_at": 5789500
+        }
+    properties:
+      owner:
+        type: string
+      name:
+        type: string
+      full_name:
+        type: string
+      number:
+        type: integer
+      status:
+        type: string
+        enum:
+          - success
+          - failure
+          - pending
+          - started
+          - error
+          - killed
+      started_at:
+        type: integer
+        format: int64
+      finished_at:
+        type: integer
+        format: int64
