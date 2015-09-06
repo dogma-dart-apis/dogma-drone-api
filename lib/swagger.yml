@@ -1017,10 +1017,10 @@ definitions:
         type: integer
       started_at:
         type: integer
-        format: int64
+        format: date-time
       finished_at:
         type: integer
-        format: int64
+        format: date-time
       environment:
         type: object
   Activity:
@@ -1054,7 +1054,7 @@ definitions:
           - killed
       started_at:
         type: integer
-        format: int64
+        format: date-time
       finished_at:
         type: integer
-        format: int64
+        format: date-time

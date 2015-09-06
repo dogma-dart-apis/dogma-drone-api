@@ -16,10 +16,10 @@ import 'package:dogma_data/serialize.dart';
 //---------------------------------------------------------------------
 
 /// Decodes a DateTime where [value] is the milliseconds since epoch.
-@Serialize.decodeThrough
+@Serialize.using
 DateTime decodeDateTime(int value)
     => new DateTime.fromMillisecondsSinceEpoch(value);
 
 /// Encodes the DateTime [value] into the milliseconds since epoch.
-@Serialize.encodeThrough
+@Serialize.using
 int encodeDateTime(DateTime value) => value.millisecondsSinceEpoch;
