@@ -4,16 +4,11 @@ description: API client for the Drone Continuous Integration Service.
 environment:
   sdk: '>=1.12.0-dev.4.0 <2.0.0'
 dependencies:
-  dogma_data:
-    path: ../dogma-data
-  dogma_mapper:
-    path: ../dogma-mapper
-  dogma_rest_client:
-    path: ../dogma-rest-client
-  dogma_rest_connection:
-    path: ../dogma-rest-connection
-  uri: ^0.11.0
+  dogma_convert: '^0.0.1'
+  dogma_rest_client: '^0.0.1'
+  dogma_rest_connection: '^0.0.1'
+  uri: '^0.11.0'
 dev_dependencies:
   dogma_swagger:
     path: ../dogma-swagger
-  test: ^0.12.3+9
+  test: '^0.12.5+1'
