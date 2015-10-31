@@ -9,7 +9,7 @@ library dogma_drone_api.src.convert.date_time_convert;
 // Imports
 //---------------------------------------------------------------------
 
-import 'package:dogma_data/serialize.dart';
+import 'package:dogma_convert/serialize.dart';
 
 //---------------------------------------------------------------------
 // Library contents
